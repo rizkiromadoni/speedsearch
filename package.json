@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --hot index.ts",
-    "start": "bun run index.ts"
+    "start": "bun run index.ts",
+    "seed": "bun run server/lib/seed.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -13,6 +14,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@upstash/redis": "^1.31.3",
     "hono": "^4.4.3"
   }
 }
