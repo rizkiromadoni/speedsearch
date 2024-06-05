@@ -1,7 +1,7 @@
 import app from "./server/app"
 
 const server = Bun.serve({
-  port: 3000,
+  port: Bun.env.PORT!,
   fetch: app.fetch
 })
 
