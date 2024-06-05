@@ -14,7 +14,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@upstash/redis": "^1.31.3",
-    "hono": "^4.4.3"
+    "hono": "^4.4.3",
+    "redis": "^4.6.14"
   }
 }

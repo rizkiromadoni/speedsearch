@@ -1,64 +1,53 @@
-import { Redis } from "@upstash/redis"
 import { Hono } from "hono"
-import { env } from "hono/adapter"
+import { serveStatic } from "hono/bun"
+import redis from "./lib/redis"
 
+redis.connect()
 const app = new Hono()
 
-type EnvConfig = {
-  UPSTASH_REDIS_REST_TOKEN: string
-  UPSTASH_REDIS_REST_URL: string
-}
+app.onError((err, c) => {
+  return c.json({
+    message: "Internal server error",
+  }, 500)
+})
 
 app.get("/api/search", async (c) => {
-  try {
-    const { UPSTASH_REDIS_REST_TOKEN, UPSTASH_REDIS_REST_URL } =
-      env<EnvConfig>(c)
+  const start = performance.now()
 
-    const start = performance.now()
+  const query = c.req.query("q")?.toUpperCase()
 
-    const redis = new Redis({
-      url: UPSTASH_REDIS_REST_URL,
-      token: UPSTASH_REDIS_REST_TOKEN
-    })
+  if (!query)
+    return c.json(
+      {
+        message: "No query provided"
+      },
+      400
+    )
 
-    const query = c.req.query("q")?.toUpperCase()
+  const results = []
+  const rank = await redis.zRank("terms", query)
 
-    if (!query)
-      return c.json(
-        {
-          message: "No query provided"
-        },
-        400
-      )
+  if (rank !== null && rank !== undefined) {
+    const temp = await redis.zRange("terms", rank, rank + 100)
 
-    const results = []
-    const rank = await redis.zrank("terms", query)
+    for (const el of temp) {
+      if (!el.startsWith(query)) break
 
-    if (rank !== null && rank !== undefined) {
-      const temp = await redis.zrange<string[]>("terms", rank, rank + 100)
-
-      for (const el of temp) {
-        if (!el.startsWith(query)) break
-
-        if (el.endsWith("*")) {
-          results.push(el.substring(0, el.length - 1))
-        }
+      if (el.endsWith("*")) {
+        results.push(el.substring(0, el.length - 1))
       }
     }
-
-    const end = performance.now()
-
-    return c.json({
-      results: results,
-      duration: end - start
-    })
-  } catch (error) {
-    console.error(error)
-    return c.json({
-        results: [],
-        message: "Something went wrong"
-    }, 500)
   }
+
+  const end = performance.now()
+
+  return c.json({
+    results: results,
+    duration: end - start
+  })
 })
+
+app.get("*", serveStatic({ root: "./client/dist" }))
+app.get("*", serveStatic({ path: "./client/dist/index.html" }))
 
 export default app
