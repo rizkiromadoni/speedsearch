@@ -6,8 +6,16 @@ COPY package*.json bun.lockb ./
 
 RUN bun install
 
+COPY client ./client
+
+RUN bun run client:install
+RUN bun run client:build
+
 COPY . .
 
-EXPOSE 3000
+ARG PORT
+ENV PORT=${PORT}
 
-CMD ["bun", "run", "start"]
+EXPOSE ${PORT}
+
+CMD ["bun", "run", "server:start"]

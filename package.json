@@ -3,8 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot index.ts",
-    "start": "bun run seed.ts && bun run index.ts"
+    "client:install": "cd client && bun install",
+    "server:dev": "bun run --hot index.ts",
+    "client:build": "cd client && bun run build",
+    "server:start": "bun run seed.ts && bun run index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
